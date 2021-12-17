@@ -15,6 +15,14 @@
         <module>java-log-api-jcl</module>
     </modules>
 
+    <properties>
+        <logback.version>1.2.6</logback.version>
+        <log4j.version>1.2.17</log4j.version>
+        <log4j2.version>2.14.1</log4j2.version>
+        <!-- 官方修复版本 -->
+        <!--<log4j2.version>2.16.0</log4j2.version>-->
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
