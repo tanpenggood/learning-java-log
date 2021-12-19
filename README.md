@@ -48,23 +48,24 @@ Log log = LogFactory.getLog("jcl");
 
 commons-logging获取日志对象的全过程，具体文字总结如下：
 
-> 获取当前线程的classLoader,根据classLoader从缓存中获取LogFactroy,使用的缓存是WeakHashTable对象;如果缓存中存在，则返回，没有则进入下面流程；
->  
-> 读取classpath下的commons-logging.properties文件，判断其中是否设置了use_tccl属性，如果不为空则判断，该属性的值是否为false,若为false，则将baseClassLoader替换为当前类的classLoader；
->  
-> 接着，继续获取LogFactory对象，此步骤分为4中方式：
-      (1)在系统属性中查找“org.apache.commons.logging.LogFactory”属性的值，根据值生成LogFactory对象；
-      (2)通过资源“META-INF/services/org.apache.commons.logging.LogFactory”文件，获取的值生成LogFactory对象；
-      (3)通过配置文件commons-logging.properties，获取以“org.apache.commons.logging.LogFactory”为key的值，根据值生成logFactory；
-      (4)如果以上均不成功，则创建系统默认的日志工厂：org.apache.commons.logging.impl.LogFactoryImpl
->  
-> 成功获取日志工厂后，根据类名获取日志对象；
->  
-> 主要逻辑在discoverLogImplementation方法中：
-      (1)检查commons-logging.properties文件中是否存在“org.apache.commons.logging.Log”属性，若存在则创建具体的日志对象；若不存在，进行下面逻辑；
-      (2)遍历classesToDiscover数组，该数组存有日志具体实现类的全限定类名：org.apache.commons.logging.impl.Log4JLogger、org.apache.commons.logging.impl.Jdk14Logger、org.apache.commons.logging.impl.Jdk13LumberjackLogger、org.apache.commons.logging.impl.SimpleLog；
-      (3)根据数组中存着的全限定类名，按照顺序依次加载Class文件，进行实例化操作，最后返回Log实例，默认为Jdk14Logger；
-
+```
+获取当前线程的classLoader,根据classLoader从缓存中获取LogFactroy,使用的缓存是WeakHashTable对象;如果缓存中存在，则返回，没有则进入下面流程；
+ 
+读取classpath下的commons-logging.properties文件，判断其中是否设置了use_tccl属性，如果不为空则判断，该属性的值是否为false,若为false，则将baseClassLoader替换为当前类的classLoader；
+ 
+接着，继续获取LogFactory对象，此步骤分为4中方式：
+    (1)在系统属性中查找“org.apache.commons.logging.LogFactory”属性的值，根据值生成LogFactory对象；
+    (2)通过资源“META-INF/services/org.apache.commons.logging.LogFactory”文件，获取的值生成LogFactory对象；
+    (3)通过配置文件commons-logging.properties，获取以“org.apache.commons.logging.LogFactory”为key的值，根据值生成logFactory；
+    (4)如果以上均不成功，则创建系统默认的日志工厂：org.apache.commons.logging.impl.LogFactoryImpl
+ 
+成功获取日志工厂后，根据类名获取日志对象；
+ 
+主要逻辑在discoverLogImplementation方法中：
+    (1)检查commons-logging.properties文件中是否存在“org.apache.commons.logging.Log”属性，若存在则创建具体的日志对象；若不存在，进行下面逻辑；
+    (2)遍历classesToDiscover数组，该数组存有日志具体实现类的全限定类名：org.apache.commons.logging.impl.Log4JLogger、org.apache.commons.logging.impl.Jdk14Logger、org.apache.commons.logging.impl.Jdk13LumberjackLogger、org.apache.commons.logging.impl.SimpleLog；
+    (3)根据数组中存着的全限定类名，按照顺序依次加载Class文件，进行实例化操作，最后返回Log实例，默认为Jdk14Logger；
+```
 ## Slf4j适配解决方案
 
 1. cd `java-log-api-slf4j`
