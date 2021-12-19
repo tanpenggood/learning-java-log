@@ -1,41 +1,41 @@
-# 学习Java日志体系
+# Learn Java Log System
 
-## 项目结构
+## Project Structure
 
 ```
-├─java-log-impl           # Java各个日志实现（jul、log4j、log4j2、logback）
+├─java-log-impl           # Java some log implementations（jul、log4j、log4j2、logback）
 ├─java-log-api-jcl        # commons logging
 ├─java-log-api-slf4j      # slf4j
-└─log4j2-vulnerabilities  # log4j2安全漏洞复现
+└─log4j2-vulnerabilities  # log4j2 CVE recurrence
 ```
 
-## Log4j2 CVE-2021-44228 复现步骤
+## Log4j2 CVE-2021-44228 recurrence step
    
 1. cd `log4j2-vulnerabilities`
-2. 启动`com.itplh.log4j2.RmiServer`
-3. 运行`com.itplh.log4j2.TestLog4j2UseJndi`
+2. run `com.itplh.log4j2.RmiServer`
+3. run `com.itplh.log4j2.TestLog4j2UseJndi`
 
-## Java日志体系实现方案
+## Java Log System Implementation plan
 
-- 接口
+- Interface
     - JCL（Apache Commons Logging）
     - Slf4j
 
-- 实现
+- Implementation
     - JUL（java.util.logging）
     - log4j
     - log4j2
     - logback
 
-## JCL（Apache Commons Logging，又名Jakarta Commons Logging）
+## JCL（Apache Commons Logging, alias Jakarta Commons Logging）
 
 1. cd `java-log-api-jcl`
-2. 运行 `com.itplh.jcl.TestCommonsLogging`，观察日志输出
-3. 调整 `commons-logging.properties` 中 Log 的具体实现，再重新运行程序，观察日志输出
+2. Run `com.itplh.jcl.TestCommonsLogging`, then observe console output
+3. Adjust `org.apache.commons.logging.Log's` value in `commons-logging.properties`, then rerun program and observe console output
 
-### 原理
+### Principle
 
-查找`org.apache.commons.logging.Log`的实现类，进行日志框架的绑定，调用栈如下：
+Load implement class who `org.apache.commons.logging.Log`, the bind log framework used it, invoke stack as follows：
 
 ```
 Log log = LogFactory.getLog("jcl");
@@ -46,35 +46,35 @@ Log log = LogFactory.getLog("jcl");
                     |- createLogFromClass:960, LogFactoryImpl (org.apache.commons.logging.impl)
 ```
 
-commons-logging获取日志对象的全过程，具体文字总结如下：
+The whole process that commons-logging get Logger, details and summary as follows：
 
 ```
-获取当前线程的classLoader,根据classLoader从缓存中获取LogFactroy,使用的缓存是WeakHashTable对象;如果缓存中存在，则返回，没有则进入下面流程；
+Get current thread of classloader, then classloader get LogFactroy from cache, that cache is WeakHashTable; if the cache exists it, return it, otherwise into next step；
  
-读取classpath下的commons-logging.properties文件，判断其中是否设置了use_tccl属性，如果不为空则判断，该属性的值是否为false,若为false，则将baseClassLoader替换为当前类的classLoader；
+Load commons-logging.properties that under classpath, judge use_tccl attribute, if it exists, then judge its value, if value is false, set baseClassLoader as current class classLoader；
  
-接着，继续获取LogFactory对象，此步骤分为4中方式：
-    (1)在系统属性中查找“org.apache.commons.logging.LogFactory”属性的值，根据值生成LogFactory对象；
-    (2)通过资源“META-INF/services/org.apache.commons.logging.LogFactory”文件，获取的值生成LogFactory对象；
-    (3)通过配置文件commons-logging.properties，获取以“org.apache.commons.logging.LogFactory”为key的值，根据值生成logFactory；
-    (4)如果以上均不成功，则创建系统默认的日志工厂：org.apache.commons.logging.impl.LogFactoryImpl
- 
-成功获取日志工厂后，根据类名获取日志对象；
- 
-主要逻辑在discoverLogImplementation方法中：
-    (1)检查commons-logging.properties文件中是否存在“org.apache.commons.logging.Log”属性，若存在则创建具体的日志对象；若不存在，进行下面逻辑；
-    (2)遍历classesToDiscover数组，该数组存有日志具体实现类的全限定类名：org.apache.commons.logging.impl.Log4JLogger、org.apache.commons.logging.impl.Jdk14Logger、org.apache.commons.logging.impl.Jdk13LumberjackLogger、org.apache.commons.logging.impl.SimpleLog；
-    (3)根据数组中存着的全限定类名，按照顺序依次加载Class文件，进行实例化操作，最后返回Log实例，默认为Jdk14Logger；
+Then get LogFactory, and has four ways: 
+    (1)in system property find “org.apache.commons.logging.LogFactory” of value, then generate LogFactory;
+    (2)in resource “META-INF/services/org.apache.commons.logging.LogFactory” of value, then generate LogFactory;
+    (3)get “org.apache.commons.logging.LogFactory” of value from commons-logging.properties, then generate LogFactory;
+    (4)if none of the above successful, create default log factory：org.apache.commons.logging.impl.LogFactoryImpl
+
+After get log factory is successfly, according to class name  get Log instance;
+
+The main logic is in discoverLogImplementation method:
+    (1)Check is exists “org.apache.commons.logging.Log” key in commons-logging.properties, create Log's implement class if this key exists, otherwise execute next logic;
+    (2)Traverse classesToDiscover array, this array saved Log's implement class full name and it contains four elements：org.apache.commons.logging.impl.Log4JLogger、org.apache.commons.logging.impl.Jdk14Logger、org.apache.commons.logging.impl.Jdk13LumberjackLogger、org.apache.commons.logging.impl.SimpleLog；
+    (3)Accroding to these full class name, load class file in order, then instantiates, final return Log's implementation.(Log's default implement class is Jdk14Logger.)
 ```
-## Slf4j适配解决方案
+## Slf4j Adaptor Solution 
 
 1. cd `java-log-api-slf4j`
-2. 运行 `com.itplh.slf4j.TestSlf4j`，观察日志输出
-3. 调整 `pom.xml` 中 slf4j适配到各个日志的依赖关系，再重新运行程序，观察日志输出
+2. Run `com.itplh.slf4j.TestSlf4j`, then observe console output
+3. Change slf4j's adaptor dependence relation where pom.xml, then rerun program and observe console out put
 
-### 原理
+### Principle
 
-查找适配器包中的`org.slf4j.impl.StaticLoggerBinder`类，进行日志框架的绑定，调用栈如下：
+Load `org.slf4j.impl.StaticLoggerBinder` from slf4j adaptor jar package, then bind log framework used it, invoke stack as follows：
 
 ```
 Logger logger = LoggerFactory.getLogger("slf4j");
@@ -85,13 +85,13 @@ Logger logger = LoggerFactory.getLogger("slf4j");
                     |- findPossibleStaticLoggerBinderPathSet:301, LoggerFactory (org.slf4j)
 ```
 
-> 当classpath中有多个`org.slf4j.impl.StaticLoggerBinder`时，最终由JVM类加载机制决定加载其中的一个。
+> If has multiple `org.slf4j.impl.StaticLoggerBinder` where classpath, final load one of these what depend on JVM class load mechanism.
 
-## Slf4j桥接方案
+## Slf4j Bridge Solution
 
-## Spring日志方案实战
+## Spring Log Solution Action
 
-## 参考
+## Reference
 
 [Apache Log4j](https://logging.apache.org/log4j/1.2/index.html)
 
